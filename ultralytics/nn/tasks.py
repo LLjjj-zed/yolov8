@@ -129,8 +129,9 @@ class BaseModel(nn.Module):
         Returns:
             (torch.Tensor): The last output of the model.
         """
+        self.model.cuda()
         y, dt, embeddings = [], [], []  # outputs
-        for m in self.model:
+        for m in self.model.cuda():
             if m.f != -1:  # if not from previous layer
                 x = y[m.f] if isinstance(m.f, int) else [x if j == -1 else y[j] for j in m.f]  # from earlier layers
             if profile:
@@ -299,11 +300,12 @@ class DetectionModel(BaseModel):
         self.inplace = self.yaml.get("inplace", True)
 
         # Build strides
-        m = self.model[-1]  # Detect()
+        m = self.model[-1].cuda()  # Detect()
         if isinstance(m, Detect):  # includes all Detect subclasses like Segment, Pose, OBB, WorldDetect
             s = 256  # 2x min stride
             m.inplace = self.inplace
-            forward = lambda x: self.forward(x)[0] if isinstance(m, (Segment, Pose, OBB)) else self.forward(x)
+            m.cuda()
+            forward = lambda x: self.forward(x.to('cuda'))[0] if isinstance(m, (Segment, Pose, OBB)) else self.forward(x.to('cuda'))
             m.stride = torch.tensor([s / x.shape[-2] for x in forward(torch.zeros(1, ch, s, s))])  # forward
             self.stride = m.stride
             m.bias_init()  # only run once
@@ -975,8 +977,9 @@ def guess_model_scale(model_path):
     with contextlib.suppress(AttributeError):
         import re
 
-        return re.search(r"yolov\d+([nslmx])", Path(model_path).stem).group(1)  # n, s, m, l, or x
-    return ""
+        # return re.search(r"yolov\d+([nslmx])", Path(model_path).stem).group(1)  # n, s, m, l, or x
+        return "n"
+    return "n"
 
 
 def guess_model_task(model):

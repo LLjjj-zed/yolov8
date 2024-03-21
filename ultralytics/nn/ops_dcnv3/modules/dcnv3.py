@@ -14,10 +14,10 @@ from torch import nn
 import torch.nn.functional as F
 from torch.nn.init import xavier_uniform_, constant_
 from ..functions import DCNv3Function, dcnv3_core_pytorch
-try:
-    from DCNv4.functions import DCNv4Function
-except:
-    warnings.warn('Now, we support DCNv4 in InternImage.')
+# try:
+#     from DCNv4.functions import DCNv4Function
+# except:
+#     warnings.warn('Now, we support DCNv4 in InternImage.')
 import math
 
 class to_channels_first(nn.Module):
